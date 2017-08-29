@@ -1,0 +1,4 @@
+Run Time Compare
+Size: 25000
+clean_review_multi( worker = 4)
+    Macbook Pro:    148.486 seconds
