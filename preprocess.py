@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 train = pd.read_csv("labeledTrainData.tsv", header=0, delimiter="\t", quoting=3)    # type: pandas.Dataframe
-
 STOP_WORDS = stopwords.words('english')
 
 
@@ -58,17 +57,30 @@ def clean_review_multi(worker = 4):
 	"""
 	logger.info('Cleaning and parsing the training set movie reviews...')
 	pool = ThreadPool(4)
-	num_review = train['review'].size
-	results = []
-	for i in xrange(0, num_review - 1000, 1000):
-		array = train['review'][i: i + 1000]
-		logger.info('Progress: %f%%. Review %i of %i', float(i) / num_review * 100, i, num_review)
-		results.extend(pool.map(review_to_words, array))
+	# num_review = train['review'].size
+	reviews = train['review']
+	results = pool.map(review_to_words, reviews)
 	return results
 
-cProfile.run('result = clean_review_multi(worker = 4)')
-with open('pickle/clean_train_review', 'w') as f:
-	pickle.dump(result, f)
+
+def create_feature_vectors(word_corpus):
+	logger.info('Creating the bag of words...')
+	from sklearn.feature_extraction.text import CountVectorizer
+	# Init 'CounterVectorizer' object
+	vectorizer = CountVectorizer(analyzer='word', tokenizer=None, preprocessor=None, stop_words=None, max_features=5000)
+	train_data_features = vectorizer.fit_transform(word_corpus)
+	train_data_features = train_data_features.toarray()
+	return train_data_features
+	
+def main():
+	# Clean reivew data
+	cProfile.run('result = clean_review_multi(worker = 4)')
+	# result = clean_review_multi(worker = 4)
+	with open('pickle/clean_train_review', 'w') as f:
+		pickle.dump(result, f)
+	
+
+main()
 
 
 
